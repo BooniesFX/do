@@ -10,7 +10,11 @@ import (
 var (
 	ConfigFlag = cli.StringFlag{
 		Name:  "config",
-		Usage: "Use `<filename>` to specifies the config file. If doesn't specifies the config, do will use default config.",
+		Usage: "Use `<filename>` to specifies the config file to connect to cunstomize network. If doesn't specifies the config, do will use default config(mainnet/testnet).",
+	}
+	TestNetFlag = cli.BoolFlag{
+		Name:  "testnet",
+		Usage: "use test net config.",
 	}
 	LogLevelFlag = cli.UintFlag{
 		Name:  "loglevel",
@@ -23,16 +27,6 @@ var (
 		Value: config.DEFAULT_DATA_DIR,
 	}
 	//P2P setting
-	NetworkIdFlag = cli.UintFlag{
-		Name:  "networkid",
-		Usage: "Using to specify the network ID. Different networkids cannot connect to the network. 1:dasein main net, 2: test net, and other for custom network",
-		Value: config.NETWORK_ID_MAIN,
-	}
-	NetworkNameFlag = cli.StringFlag{
-		Name:  "networkname",
-		Usage: "Using to specify the network name for custom network",
-		Value: config.NETWORK_NAME_TEST,
-	}
 	ProtocolFlag = cli.StringFlag{
 		Name:  "protocol",
 		Usage: "Using to specify the protocol for listen(tcp/kcp)",

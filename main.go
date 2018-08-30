@@ -26,8 +26,6 @@ func initAPP() *cli.App {
 		cmd.LogLevelFlag,
 		cmd.DataDirFlag,
 		//p2p setting
-		cmd.NetworkIdFlag,
-		cmd.NetworkNameFlag,
 		cmd.ProtocolFlag,
 		cmd.PortFlag,
 		cmd.GRPCPortFlag,

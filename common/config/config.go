@@ -8,11 +8,18 @@ import (
 var VERSION = "0"
 
 const (
-	NETWORK_ID_MAIN = 1
-	NETWORK_ID_TEST = 2
+	NETWORK_NAME_MAIN  = "dasein"
+	NETWORK_NAME_TEST  = "test"
+	NETWORK_MAGIC_MAIN = 0x19fd3b3a
+	NETWORK_MAGIC_TEST = 0x1aacb7f5
+)
 
-	NETWORK_NAME_MAIN = "dasein"
-	NETWORK_NAME_TEST = "test"
+type nettype int32
+
+const (
+	mainnet nettype = iota
+	testnet
+	custom
 )
 
 //default p2p parameter
@@ -34,8 +41,6 @@ const (
 	DEFAULT_BACKOFF_PRIORITY      = 100
 	DEFAULT_SIGNATURE_POLICY      = "ed25519"
 	DEFAULT_HASH_POLICY           = "blake2b"
-	NETWORK_MAGIC_MAIN            = 0x19fd3b3a
-	NETWORK_MAGIC_TEST            = 0x1aacb7f5
 	DEFAULT_MAX_CONN_LIMIT        = 256
 	DEFAULT_MAX_INBOUND_SINGLE_IP = 32
 )
@@ -65,25 +70,24 @@ var TestNetSeeds = []string{
 	"kcp://seed5.dasein.io:7921"}
 
 type NetworkConfig struct {
-	SeedList  []string
-	NetworkId uint   `json:"id"`
-	Magic     uint   `json:"n"`
-	Name      string `help:"network name"`
+	SeedList []string `json:"seeds"`
+	Magic    uint     `json:"magic"`
+	Name     string   `json:"network name"`
 }
 
 //network config
 type P2PConfig struct {
-	Port           uint   `port`
-	GRPCPort       uint   `help:"gRPC port to listen to"`
-	JSONPort       uint   `help:"JSON-RPC port to listen to"`
-	protocol       string `help:"protocol to use (kcp/tcp)"`
-	Nat            bool   `help:"enable nat traversal"`
-	DHT            bool   `help:"enable peer discovery"`
-	Reconnect      bool   `help:"enable reconnections"`
+	Port           uint
+	GRPCPort       uint
+	JSONPort       uint
+	protocol       string
+	Nat            bool
+	DHT            bool
+	Reconnect      bool
 	MaxConnLimit   uint
 	MaxForSingleIP uint
-	SignatureAlgo  string `help:"signature policy(ed25519)"`
-	HashAlgo       string `help:"hash policy(blake2b)"`
+	SignatureAlgo  string
+	HashAlgo       string
 }
 
 type CommonConfig struct {
@@ -92,6 +96,7 @@ type CommonConfig struct {
 }
 
 type GenesisConfig struct {
+	Network *NetworkConfig
 }
 
 type ConsensusConfig struct {
@@ -101,48 +106,45 @@ type DaseinConfig struct {
 	Genesis   *GenesisConfig
 	Common    *CommonConfig
 	Consensus *ConsensusConfig
-	Network   *NetworkConfig
 	P2P       *P2PConfig
 }
 
 var MainNetWork = &NetworkConfig{
-	SeedList:  MainNetSeeds,
-	NetworkId: NETWORK_ID_MAIN,
-	Magic:     NETWORK_MAGIC_MAIN,
-	Name:      NETWORK_NAME_MAIN,
+	SeedList: MainNetSeeds,
+	Magic:    NETWORK_MAGIC_MAIN,
+	Name:     NETWORK_NAME_MAIN,
 }
 
 var TestNetWork = &NetworkConfig{
-	SeedList:  TestNetSeeds,
-	NetworkId: NETWORK_ID_TEST,
-	Magic:     NETWORK_MAGIC_TEST,
-	Name:      NETWORK_NAME_TEST,
+	SeedList: TestNetSeeds,
+	Magic:    NETWORK_MAGIC_TEST,
+	Name:     NETWORK_NAME_TEST,
 }
 
-func NewDaseinConfig(id uint) *DaseinConfig {
+func NewDaseinConfig(nt nettype) *DaseinConfig {
 	net := &NetworkConfig{}
-	switch id {
-	case NETWORK_ID_TEST:
-		net = TestNetWork
-	case NETWORK_MAGIC_MAIN:
+	switch nt {
+	case mainnet:
 		net = MainNetWork
-	default:
-
+	case testnet:
+		net = TestNetWork
+	default: //custom
 	}
 	return &DaseinConfig{
-		Genesis: &GenesisConfig{},
+		Genesis: &GenesisConfig{
+			Network: net,
+		},
 		Common: &CommonConfig{
 			LogLevel: DEFAULT_LOG_LEVEL,
 			DataDir:  DEFAULT_DATA_DIR,
 		},
 		Consensus: &ConsensusConfig{},
-		Network:   net,
 		P2P: &P2PConfig{
 			Port:           DEFAULT_LISTEN_PORT,
 			GRPCPort:       DEFAULT_GRPC_PORT,
 			JSONPort:       DEFAULT_JSONRPC_PORT,
 			protocol:       DEFAULT_LISTEN_PROTOCOL,
-			Nat:            false,
+			Nat:            true,
 			DHT:            true,
 			Reconnect:      true,
 			MaxConnLimit:   DEFAULT_MAX_CONN_LIMIT,
@@ -154,4 +156,4 @@ func NewDaseinConfig(id uint) *DaseinConfig {
 }
 
 //current default config
-var DefConfig = NewDaseinConfig(NETWORK_ID_TEST)
+var DefConfig = NewDaseinConfig(testnet)
