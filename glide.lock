@@ -1,0 +1,23 @@
+hash: be0188f65af08af0bc26f9dbc711c084cae4fee808964860ce47ef5c1fd6b53b
+updated: 2018-08-29T13:44:59.864170782+08:00
+imports:
+- name: github.com/daseinio/dasein-p2p
+  version: aef5a28591b71f2d0cf65fa9f1406e198cb26521
+  subpackages:
+  - crypto
+  - crypto/blake2b
+  - crypto/ed25519
+  - crypto/ed25519/internal/edwards25519
+- name: github.com/gogo/protobuf
+  version: 636bf0302bc95575d69441b25a2603156ffdddf1
+- name: github.com/golang/glog
+  version: 23def4e6c14b4da8ac2ed8007337bc5eb5007998
+- name: github.com/jpillora/opts
+  version: 3f7962811f238e35bdbd9a74cbfcd45b209dd298
+- name: github.com/kardianos/osext
+  version: ae77be60afb1dcacde03767a8c37337fad28ac14
+- name: github.com/minio/blake2b-simd
+  version: 3f5f724cb5b182a5c278d6d3d55b40e7f8c2efb4
+- name: github.com/pkg/errors
+  version: 645ef00459ed84a119197bfb8d8205042c6df63d
+testImports: []

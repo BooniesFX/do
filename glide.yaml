@@ -3,4 +3,6 @@ import:
 - package: github.com/daseinio/dasein-p2p
 - package: github.com/gogo/protobuf 
   version: v1.1.1
+- package: github.com/urfave/cli
+- package: github.com/golang/glog
   

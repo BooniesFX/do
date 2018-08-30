@@ -1,7 +1,7 @@
 GOFMT=gofmt
 GC=go build
 VERSION := $(shell git describe --abbrev=4 --always --tags)
-BUILD_DO_PAR = -ldflags "-X main.VERSION=$(VERSION)"
+BUILD_DO_PAR = -ldflags "-X github.com/dasein/do/common/config.VERSION=$(VERSION)"
 
 SRC_FILES = $(shell git ls-files | grep -e .go$ | grep -v _test.go)
 
