@@ -9,7 +9,7 @@ import (
 
 	"github.com/daseinio/do/cmd"
 	"github.com/daseinio/do/common/config"
-	"github.com/golang/glog"
+	"github.com/daseinio/do/common/log"
 	"github.com/urfave/cli"
 )
 
@@ -23,6 +23,7 @@ func initAPP() *cli.App {
 	app.Flags = []cli.Flag{
 		//common setting
 		cmd.ConfigFlag,
+		cmd.LogStderrFlag,
 		cmd.LogLevelFlag,
 		cmd.DataDirFlag,
 		//p2p setting
@@ -50,11 +51,19 @@ func main() {
 	}
 }
 func doit(ctx *cli.Context) {
+	initLog(ctx)
 	waitToExit()
 }
 
-func initLog() {
-
+func initLog(ctx *cli.Context) {
+	//init log module
+	log.SetLevel(ctx.GlobalUint(cmd.GetFlagName(cmd.LogLevelFlag)))
+	if ctx.Bool(cmd.GetFlagName(cmd.LogStderrFlag)) {
+		log.InitLog(0, config.DEFAULT_LOG_DIR)
+	} else {
+		log.InitLog(1, config.DEFAULT_LOG_DIR)
+	}
+	log.Info("start logging...")
 }
 
 func waitToExit() {
@@ -63,7 +72,7 @@ func waitToExit() {
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	go func() {
 		for sig := range sc {
-			glog.Infof("do received exit signal:%v.", sig.String())
+			log.Infof("do received exit signal:%v.", sig.String())
 			close(exit)
 			break
 		}

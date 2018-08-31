@@ -5,7 +5,7 @@ import (
 )
 
 //VERSION set this via ldflags
-var VERSION = "0"
+var VERSION = ""
 
 const (
 	NETWORK_NAME_MAIN  = "dasein"
@@ -50,8 +50,8 @@ const (
 	DEFAULT_INIT_DIR     = ".do"
 	DEFAULT_DATA_DIR     = "./data"
 	DEFAULT_LOG_DIR      = "./log"
-	DEFAULT_LOG_LEVEL    = 1  //INFO
-	DEFAULT_MAX_LOG_SIZE = 20 //MB
+	DEFAULT_LOG_LEVEL    = 1                //INFO
+	DEFAULT_MAX_LOG_SIZE = 20 * 1024 * 1024 //MB
 )
 
 //main net genesis config

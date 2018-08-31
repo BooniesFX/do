@@ -16,9 +16,13 @@ var (
 		Name:  "testnet",
 		Usage: "use test net config.",
 	}
+	LogStderrFlag = cli.BoolFlag{
+		Name:  "logstderr",
+		Usage: "log to standard error instead of files,default false",
+	}
 	LogLevelFlag = cli.UintFlag{
 		Name:  "loglevel",
-		Usage: "Set the log level to `<level>` (0~4). 0:stdout only 1:INFO 2:WARNING 3:ERROR 4:FATAL",
+		Usage: "Set the log level to `<level>` (0~4). 0:debug 1:INFO 2:WARNING 3:ERROR 4:FATAL",
 		Value: config.DEFAULT_LOG_LEVEL,
 	}
 	DataDirFlag = cli.StringFlag{
