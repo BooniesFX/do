@@ -35,6 +35,18 @@ const (
 	logtostderr mode = iota
 	alsologtostderr
 )
+const (
+	Blue   = "0;34"
+	Red    = "0;31"
+	Green  = "0;32"
+	Yellow = "0;33"
+	Cyan   = "0;36"
+	Pink   = "1;35"
+)
+
+func Color(code, msg string) string {
+	return fmt.Sprintf("\033[%sm%s\033[m", code, msg)
+}
 
 var severityName = []string{
 	debugLog:   "DEBUG",
@@ -42,6 +54,13 @@ var severityName = []string{
 	warningLog: "WARNING",
 	errorLog:   "ERROR",
 	fatalLog:   "FATAL",
+}
+var severityColor = []string{
+	debugLog:   Color(Green, "[DEBUG]"),
+	infoLog:    Color(Cyan, "[INFO ]"),
+	warningLog: Color(Yellow, "[WARN ]"),
+	errorLog:   Color(Red, "[ERROR]"),
+	fatalLog:   Color(Pink, "[FATAL]"),
 }
 
 // get returns the value of the severity.
@@ -320,6 +339,10 @@ func SetMaxSize(size uint64) {
 func SetLevel(v uint) {
 	logging.mu.Lock()
 	defer logging.mu.Unlock()
+	if v > uint(fatalLog) {
+		fmt.Println("log:exceed max level, set to INFO for safety")
+		v = uint(infoLog) // for safety.
+	}
 	logging.stderrThreshold = severity(v)
 	logging.setVState(Level(v), logging.vmodule.filter, false)
 }
@@ -496,20 +519,17 @@ func (l *loggingT) formatHeader(s severity, file string, line int) *buffer {
 
 	hour, minute, second := now.Clock()
 	//[INFO]hh:mm:ss.uuuuuu threadid file:line
-	buf.WriteString("\033[0;34m[")
-	buf.WriteString(severityName[s])
-	buf.WriteString("\033[m")
-	buf.tmp[0] = ']'
-	buf.tmp[1] = ' '
-	buf.twoDigits(2, hour)
-	buf.tmp[4] = ':'
-	buf.twoDigits(5, minute)
-	buf.tmp[7] = ':'
-	buf.twoDigits(8, second)
-	buf.tmp[10] = '.'
-	buf.nDigits(6, 11, now.Nanosecond()/1000, '0')
-	buf.tmp[17] = ' '
-	buf.Write(buf.tmp[:18])
+	buf.WriteString(severityColor[s])
+	buf.tmp[0] = ' '
+	buf.twoDigits(1, hour)
+	buf.tmp[3] = ':'
+	buf.twoDigits(4, minute)
+	buf.tmp[6] = ':'
+	buf.twoDigits(7, second)
+	buf.tmp[9] = '.'
+	buf.nDigits(6, 10, now.Nanosecond()/1000, '0')
+	buf.tmp[16] = ' '
+	buf.Write(buf.tmp[:17])
 	buf.WriteString("GID ")
 	n := buf.someDigits(0, getGID())
 	buf.tmp[n+1] = ' '
@@ -614,35 +634,25 @@ func (l *loggingT) output(s severity, buf *buffer, file string, line int, alsoTo
 			buf.Write(stacks(false))
 		}
 	}
+	if s < l.stderrThreshold.get() {
+		l.mu.Unlock()
+		return
+	}
 	data := buf.Bytes()
-	if l.toStderr {
-		os.Stderr.Write(data)
-	} else {
-		if alsoToStderr || l.alsoToStderr || s >= l.stderrThreshold.get() {
-			os.Stderr.Write(data)
-		}
+	os.Stderr.Write(data)
+	if alsoToStderr || l.alsoToStderr {
 		if l.file[s] == nil {
 			if err := l.createFiles(s); err != nil {
 				os.Stderr.Write(data) // Make sure the message appears somewhere.
 				l.exit(err)
 			}
 		}
-		switch s {
-		case fatalLog:
-			l.file[fatalLog].Write(data)
-			fallthrough
-		case errorLog:
-			l.file[errorLog].Write(data)
-			fallthrough
-		case warningLog:
-			l.file[warningLog].Write(data)
-			fallthrough
-		case infoLog:
-			l.file[infoLog].Write(data)
-			fallthrough
-		case debugLog:
-			l.file[debugLog].Write(data)
+		for log := fatalLog; log >= l.stderrThreshold.get(); log-- {
+			if f := l.file[log]; f != nil {
+				f.Write(data)
+			}
 		}
+
 	}
 	if s == fatalLog {
 		// If we got here via Exit rather than Fatal, print no stacks.
@@ -680,7 +690,7 @@ func (l *loggingT) output(s severity, buf *buffer, file string, line int, alsoTo
 
 // timeoutFlush calls Flush and returns when it completes or after timeout
 // elapses, whichever happens first.  This is needed because the hooks invoked
-// by Flush may deadlock when glog.Fatal is called from a hook that holds
+// by Flush may deadlock when log.Fatal is called from a hook that holds
 // a lock.
 func timeoutFlush(timeout time.Duration) {
 	done := make(chan bool, 1)
@@ -691,7 +701,7 @@ func timeoutFlush(timeout time.Duration) {
 	select {
 	case <-done:
 	case <-time.After(timeout):
-		fmt.Fprintln(os.Stderr, "glog: Flush took longer than", timeout)
+		fmt.Fprintln(os.Stderr, "log: Flush took longer than", timeout)
 	}
 }
 
@@ -795,13 +805,13 @@ func (sb *syncBuffer) rotateFile(now time.Time) error {
 // on disk I/O. The flushDaemon will block instead.
 const bufferSize = 256 * 1024
 
-// createFiles creates all the log files for severity from sev down to infoLog.
+// createFiles creates all the log files for severity from fatal down to level.
 // l.mu is held.
 func (l *loggingT) createFiles(sev severity) error {
 	now := time.Now()
 	// Files are created in decreasing severity order, so as soon as we find one
 	// has already been created, we can stop.
-	for s := sev; s >= debugLog && l.file[s] == nil; s-- {
+	for s := fatalLog; s >= l.stderrThreshold.get() && l.file[s] == nil; s-- {
 		sb := &syncBuffer{
 			logger: l,
 			sev:    s,
@@ -921,16 +931,6 @@ func (l *loggingT) setV(pc uintptr) Level {
 // See the documentation of V for more information.
 type Verbose bool
 
-// V reports whether verbosity at the call site is at least the requested level.
-// The returned value is a boolean of type Verbose, which implements Info, Infoln
-// and Infof. These methods will write to the Info log if called.
-// Thus, one may write either
-//	if glog.V(2) { glog.Info("log this") }
-// or
-//	glog.V(2).Info("log this")
-// The second form is shorter but the first is cheaper if logging is off because it does
-// not evaluate its arguments.
-//
 // Whether an individual call to V generates a log record depends on the setting of
 // the -v and --vmodule flags; both are off by default. If the level in the call to
 // V is at least the value of -v, or of -vmodule for the source file containing the

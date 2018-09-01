@@ -64,6 +64,10 @@ func initLog(ctx *cli.Context) {
 		log.InitLog(1, config.DEFAULT_LOG_DIR)
 	}
 	log.Info("start logging...")
+	log.Debug("start logging...")
+	log.Warning("start logging...")
+	log.Error("start logging...")
+	log.Fatal("start logging...")
 }
 
 func waitToExit() {
