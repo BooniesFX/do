@@ -4,5 +4,6 @@ import:
 - package: github.com/gogo/protobuf 
   version: v1.1.1
 - package: github.com/urfave/cli
+- package: github.com/anacrolix/torrent
 
   

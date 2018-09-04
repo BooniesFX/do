@@ -33,7 +33,6 @@ const (
 	DEFAULT_GRPC_PORT            = uint(6922)
 	DEFAULT_JSONRPC_PORT         = uint(8923)
 	DEFAULT_LISTEN_PROTOCOL      = "tcp"
-	DEFAULT_NETWORK_ADDRESS      = "tcp://localhost:6921"
 
 	//component
 	DEFAULT_BACKOFF_DELAY         = 5 * time.Second
@@ -48,10 +47,15 @@ const (
 //default common parameter
 const (
 	DEFAULT_INIT_DIR     = ".do"
-	DEFAULT_DATA_DIR     = "./data"
 	DEFAULT_LOG_DIR      = "./log"
 	DEFAULT_LOG_LEVEL    = 1                //INFO
 	DEFAULT_MAX_LOG_SIZE = 20 * 1024 * 1024 //MB
+)
+
+//default engine parameter
+const (
+	DEFAULT_ENGINE_INCOMINGPORT = uint(16921)
+	DEFAULT_ENGINE_DOWNLOADDIR  = "./data"
 )
 
 //main net genesis config
@@ -69,7 +73,7 @@ var TestNetSeeds = []string{
 	"kcp://seed4.dasein.io:7921",
 	"kcp://seed5.dasein.io:7921"}
 
-type NetworkConfig struct {
+type SeedNetworkConfig struct {
 	SeedList []string `json:"seeds"`
 	Magic    uint     `json:"magic"`
 	Name     string   `json:"network name"`
@@ -78,28 +82,40 @@ type NetworkConfig struct {
 //network config
 type P2PConfig struct {
 	Port           uint
-	GRPCPort       uint
-	JSONPort       uint
-	protocol       string
+	Protocol       string
 	Nat            bool
 	DHT            bool
 	Reconnect      bool
 	MaxConnLimit   uint
 	MaxForSingleIP uint
-	SignatureAlgo  string
-	HashAlgo       string
+	//SignatureAlgo  string
+	//HashAlgo       string
 }
 
 type CommonConfig struct {
-	LogLevel uint
-	DataDir  string
+	LogLevel  uint
+	LogStderr bool
 }
 
 type GenesisConfig struct {
-	Network *NetworkConfig
+	Network *SeedNetworkConfig
 }
 
 type ConsensusConfig struct {
+}
+
+type RpcConfig struct {
+	EnableGRPC bool
+	EnableJson bool
+	GRPCPort   uint
+	JSONPort   uint
+}
+
+type EngineConfig struct {
+	EnableUpload      bool
+	EnableSeeding     bool
+	IncomingPort      int
+	DownloadDirectory string
 }
 
 type DaseinConfig struct {
@@ -107,22 +123,24 @@ type DaseinConfig struct {
 	Common    *CommonConfig
 	Consensus *ConsensusConfig
 	P2P       *P2PConfig
+	Rpc       *RpcConfig
+	Engine    *EngineConfig
 }
 
-var MainNetWork = &NetworkConfig{
+var MainNetWork = &SeedNetworkConfig{
 	SeedList: MainNetSeeds,
 	Magic:    NETWORK_MAGIC_MAIN,
 	Name:     NETWORK_NAME_MAIN,
 }
 
-var TestNetWork = &NetworkConfig{
+var TestNetWork = &SeedNetworkConfig{
 	SeedList: TestNetSeeds,
 	Magic:    NETWORK_MAGIC_TEST,
 	Name:     NETWORK_NAME_TEST,
 }
 
 func NewDaseinConfig(nt nettype) *DaseinConfig {
-	net := &NetworkConfig{}
+	net := &SeedNetworkConfig{}
 	switch nt {
 	case mainnet:
 		net = MainNetWork
@@ -135,23 +153,28 @@ func NewDaseinConfig(nt nettype) *DaseinConfig {
 			Network: net,
 		},
 		Common: &CommonConfig{
-			LogLevel: DEFAULT_LOG_LEVEL,
-			DataDir:  DEFAULT_DATA_DIR,
+			LogLevel:  DEFAULT_LOG_LEVEL,
+			LogStderr: false,
 		},
 		Consensus: &ConsensusConfig{},
 		P2P: &P2PConfig{
 			Port:           DEFAULT_LISTEN_PORT,
-			GRPCPort:       DEFAULT_GRPC_PORT,
-			JSONPort:       DEFAULT_JSONRPC_PORT,
-			protocol:       DEFAULT_LISTEN_PROTOCOL,
+			Protocol:       DEFAULT_LISTEN_PROTOCOL,
 			Nat:            true,
 			DHT:            true,
 			Reconnect:      true,
 			MaxConnLimit:   DEFAULT_MAX_CONN_LIMIT,
 			MaxForSingleIP: DEFAULT_MAX_INBOUND_SINGLE_IP,
-			SignatureAlgo:  DEFAULT_SIGNATURE_POLICY,
-			HashAlgo:       DEFAULT_HASH_POLICY,
+			//SignatureAlgo:  DEFAULT_SIGNATURE_POLICY,
+			//HashAlgo:       DEFAULT_HASH_POLICY,
 		},
+		Rpc: &RpcConfig{
+			EnableGRPC: false,
+			EnableJson: false,
+			GRPCPort:   DEFAULT_GRPC_PORT,
+			JSONPort:   DEFAULT_JSONRPC_PORT,
+		},
+		Engine: &EngineConfig{},
 	}
 }
 

@@ -58,16 +58,13 @@ func doit(ctx *cli.Context) {
 func initLog(ctx *cli.Context) {
 	//init log module
 	log.SetLevel(ctx.GlobalUint(cmd.GetFlagName(cmd.LogLevelFlag)))
+	log.SetMaxSize(DEFAULT_MAX_LOG_SIZE)
 	if ctx.Bool(cmd.GetFlagName(cmd.LogStderrFlag)) {
 		log.InitLog(0, config.DEFAULT_LOG_DIR)
 	} else {
 		log.InitLog(1, config.DEFAULT_LOG_DIR)
 	}
 	log.Info("start logging...")
-	log.Debug("start logging...")
-	log.Warning("start logging...")
-	log.Error("start logging...")
-	log.Fatal("start logging...")
 }
 
 func waitToExit() {

@@ -10,25 +10,21 @@ import (
 var (
 	ConfigFlag = cli.StringFlag{
 		Name:  "config",
-		Usage: "Use `<filename>` to specifies the config file to connect to cunstomize network. If doesn't specifies the config, do will use default config(mainnet/testnet).",
+		Usage: "Use `<filename>` to specifies the config file to connect to cunstomize network. If doesn't specifies the config, do will use default config(mainnet).",
 	}
 	TestNetFlag = cli.BoolFlag{
 		Name:  "testnet",
-		Usage: "use test net config.",
+		Usage: "use test net config , default use mainnet config",
 	}
+	//commmon
 	LogStderrFlag = cli.BoolFlag{
 		Name:  "logstderr",
 		Usage: "log to standard error instead of files,default false",
 	}
 	LogLevelFlag = cli.UintFlag{
 		Name:  "loglevel",
-		Usage: "Set the log level to `<level>` (0~4). 0:debug 1:INFO 2:WARNING 3:ERROR 4:FATAL",
+		Usage: "Set the log level to `<level>` (0~4). 0:DEBUG 1:INFO 2:WARNING 3:ERROR 4:FATAL",
 		Value: config.DEFAULT_LOG_LEVEL,
-	}
-	DataDirFlag = cli.StringFlag{
-		Name:  "datadir",
-		Usage: "Using dir `<path>` to storage block data",
-		Value: config.DEFAULT_DATA_DIR,
 	}
 	//P2P setting
 	ProtocolFlag = cli.StringFlag{
@@ -39,16 +35,6 @@ var (
 	PortFlag = cli.UintFlag{
 		Name:  "port",
 		Usage: "Using to specify the P2P network port number",
-		Value: config.DEFAULT_LISTEN_PORT,
-	}
-	GRPCPortFlag = cli.UintFlag{
-		Name:  "grpcport",
-		Usage: "Using to specify the gRPC port number",
-		Value: config.DEFAULT_GRPC_PORT,
-	}
-	JSONPortFlag = cli.UintFlag{
-		Name:  "jsonport",
-		Usage: "Using to specify the JSON-RPC network port number",
 		Value: config.DEFAULT_LISTEN_PORT,
 	}
 	NatSupportFlag = cli.BoolFlag{
@@ -72,6 +58,36 @@ var (
 		Name:  "maxinforsingleip",
 		Usage: "Max connection in bound for single ip",
 		Value: config.DEFAULT_MAX_INBOUND_SINGLE_IP,
+	}
+	//RPC setting
+	EnableGRPCFlag = cli.BoolFlag{
+		Name:  "grpc",
+		Usage: "enable gRPC",
+	}
+	GRPCPortFlag = cli.UintFlag{
+		Name:  "grpcport",
+		Usage: "Using to specify the gRPC port number",
+		Value: config.DEFAULT_GRPC_PORT,
+	}
+	EnableJsonFlag = cli.BoolFlag{
+		Name:  "jsonrpc",
+		Usage: "enable JSON-RPC",
+	}
+	JSONPortFlag = cli.UintFlag{
+		Name:  "jsonport",
+		Usage: "Using to specify the JSON-RPC network port number",
+		Value: config.DEFAULT_JSONRPC_PORT,
+	}
+	//Engine setting
+	DownloadDirFlag = cli.StringFlag{
+		Name:  "dir",
+		Usage: "Using dir `<path>` to storage downlod data",
+		Value: config.DEFAULT_ENGINE_DOWNLOADDIR,
+	}
+	IncomigPortFlag = cli.UintFlag{
+		Name:  "engineport",
+		Usage: "Using to specify the engine port number",
+		Value: config.DEFAULT_ENGINE_INCOMINGPORT,
 	}
 )
 
