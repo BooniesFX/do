@@ -33,7 +33,7 @@ func (this *netserver) ShutDown() {
 	log.Infoln("shuts down the entire network")
 }
 
-func (this *netserver) Initialize() {
+func (this *netserver) Initialize(magic uint32) {
 
 	builder := p2p.NewBuilderWithOptions(
 		p2p.SignaturePolicy(config.DEFAULT_SIGNATURE_POLICY),
@@ -69,12 +69,15 @@ func (this *netserver) Initialize() {
 	//rpc setup
 	//traffic register
 	//
+	//builder.SetMagic(magic)
+	log.Infof("network magic number is %x", magic)
 	this.peer, err = builder.Build()
 	if err != nil {
 		log.Fatalln(err)
 		return
 	}
-	this.ID = this.net.ID
+	this.ID = this.peer.ID
+	log.Infof("peer id is %x", this.ID)
 
 }
 
@@ -121,12 +124,6 @@ func (this *netserver) SendTo(id *peer.ID, message proto.Message) error {
 	}
 
 	routes := Component.(*discovery.Component).Routes
-
-	// If the target is in our routing table, directly proxy the message to them.
-	if routes.PeerExists(targetID) {
-		this.peer.BroadcastByAddresses(message, targetID.Address)
-		return nil
-	}
 
 	// Find the 3 closest peers from a nodes point of view (might include us).
 	closestPeers := routes.FindClosestPeers(targetID, 3)

@@ -23,19 +23,26 @@ func initAPP() *cli.App {
 	app.Flags = []cli.Flag{
 		//common setting
 		cmd.ConfigFlag,
+		cmd.TestNetFlag,
 		cmd.LogStderrFlag,
 		cmd.LogLevelFlag,
-		cmd.DataDirFlag,
 		//p2p setting
 		cmd.ProtocolFlag,
 		cmd.PortFlag,
-		cmd.GRPCPortFlag,
-		cmd.JSONPortFlag,
 		cmd.NatSupportFlag,
 		cmd.DHTSupportFlag,
 		cmd.BackOffSupportFlag,
-		cmd.MaxConnectionFlag,
+		cmd.MaxInBoundConnectionFlag,
+		cmd.MaxOutBoundConnectionFlag,
 		cmd.MaxForSingleIPFlag,
+		//rpc
+		cmd.EnableGRPCFlag,
+		cmd.GRPCPortFlag,
+		cmd.EnableJsonFlag,
+		cmd.JSONPortFlag,
+		//engine
+		cmd.DownloadDirFlag,
+		cmd.IncomigPortFlag,
 	}
 	app.Before = func(context *cli.Context) error {
 		runtime.GOMAXPROCS(runtime.NumCPU())
@@ -58,7 +65,7 @@ func doit(ctx *cli.Context) {
 func initLog(ctx *cli.Context) {
 	//init log module
 	log.SetLevel(ctx.GlobalUint(cmd.GetFlagName(cmd.LogLevelFlag)))
-	log.SetMaxSize(DEFAULT_MAX_LOG_SIZE)
+	log.SetMaxSize(config.DEFAULT_MAX_LOG_SIZE)
 	if ctx.Bool(cmd.GetFlagName(cmd.LogStderrFlag)) {
 		log.InitLog(0, config.DEFAULT_LOG_DIR)
 	} else {
