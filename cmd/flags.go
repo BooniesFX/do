@@ -49,13 +49,18 @@ var (
 		Name:  "reconnect",
 		Usage: "reconnect enable the client try to reconnect remote peer whose connect is broken. ",
 	}
-	MaxConnectionFlag = cli.UintFlag{
-		Name:  "maxconnect",
-		Usage: "Max connection in total",
-		Value: config.DEFAULT_MAX_CONN_LIMIT,
+	MaxInBoundConnectionFlag = cli.UintFlag{
+		Name:  "maxinbound",
+		Usage: "Max connection inbound",
+		Value: config.DEFAULT_MAX_CONN_INBOUND_LIMIT,
+	}
+	MaxOutBoundConnectionFlag = cli.UintFlag{
+		Name:  "maxoutbound",
+		Usage: "Max connection outbound",
+		Value: config.DEFAULT_MAX_CONN_OUTBOUND_LIMIT,
 	}
 	MaxForSingleIPFlag = cli.UintFlag{
-		Name:  "maxinforsingleip",
+		Name:  "maxinboundforsingleip",
 		Usage: "Max connection in bound for single ip",
 		Value: config.DEFAULT_MAX_INBOUND_SINGLE_IP,
 	}

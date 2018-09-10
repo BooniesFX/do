@@ -1,6 +1,8 @@
 package config
 
 import (
+	"crypto/sha256"
+	"encoding/binary"
 	"time"
 )
 
@@ -8,10 +10,8 @@ import (
 var VERSION = ""
 
 const (
-	NETWORK_NAME_MAIN  = "dasein"
-	NETWORK_NAME_TEST  = "test"
-	NETWORK_MAGIC_MAIN = 0x19fd3b3a
-	NETWORK_MAGIC_TEST = 0x1aacb7f5
+	NETWORK_NAME_MAIN = "dasein"
+	NETWORK_NAME_TEST = "test"
 )
 
 type nettype int32
@@ -42,8 +42,9 @@ const (
 	DEFAULT_BACKOFF_DELAY    = 5 * time.Second
 	DEFAULT_BACKOFF_ATTEMPTS = 5
 
-	DEFAULT_MAX_CONN_LIMIT        = 128
-	DEFAULT_MAX_INBOUND_SINGLE_IP = 16
+	DEFAULT_MAX_CONN_INBOUND_LIMIT  = 128
+	DEFAULT_MAX_CONN_OUTBOUND_LIMIT = 32
+	DEFAULT_MAX_INBOUND_SINGLE_IP   = 16
 )
 
 //default common parameter
@@ -77,21 +78,19 @@ var TestNetSeeds = []string{
 
 type SeedNetworkConfig struct {
 	SeedList []string `json:"seeds"`
-	Magic    uint     `json:"magic"`
 	Name     string   `json:"network name"`
 }
 
 //network config
 type P2PConfig struct {
-	Port           uint
-	Protocol       string
-	Nat            bool
-	DHT            bool
-	Reconnect      bool
-	MaxConnLimit   uint
-	MaxForSingleIP uint
-	//SignatureAlgo  string
-	//HashAlgo       string
+	Port             uint
+	Protocol         string
+	Nat              bool
+	DHT              bool
+	Reconnect        bool
+	MaxConnInLimit   uint
+	MaxConnOutLimit  uint
+	MaxInForSingleIP uint
 }
 
 type CommonConfig struct {
@@ -106,6 +105,15 @@ type GenesisConfig struct {
 type ConsensusConfig struct {
 }
 
+//return hash of genesis config
+func (this *GenesisConfig) genesisMagic() uint32 {
+	//generate genesis byte
+	//TODO code if compute from genesis file
+	code := []byte{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2}
+	data := sha256.Sum256(code)
+	return binary.LittleEndian.Uint32(data[0:4])
+}
+
 type RpcConfig struct {
 	EnableGRPC bool
 	EnableJson bool
@@ -114,61 +122,50 @@ type RpcConfig struct {
 }
 
 type EngineConfig struct {
-	EnableUpload      bool
-	EnableSeeding     bool
-	IncomingPort      int
+	IncomingPort      uint
 	DownloadDirectory string
 }
 
 type DaseinConfig struct {
+	Magic     uint32
 	Genesis   *GenesisConfig
-	Common    *CommonConfig
 	Consensus *ConsensusConfig
+	Common    *CommonConfig
 	P2P       *P2PConfig
 	Rpc       *RpcConfig
 	Engine    *EngineConfig
 }
 
-var MainNetWork = &SeedNetworkConfig{
-	SeedList: MainNetSeeds,
-	Magic:    NETWORK_MAGIC_MAIN,
-	Name:     NETWORK_NAME_MAIN,
+var MainNetGenesis = &GenesisConfig{
+	Network: &SeedNetworkConfig{
+		SeedList: MainNetSeeds,
+		Name:     NETWORK_NAME_MAIN,
+	},
 }
 
-var TestNetWork = &SeedNetworkConfig{
-	SeedList: TestNetSeeds,
-	Magic:    NETWORK_MAGIC_TEST,
-	Name:     NETWORK_NAME_TEST,
+var TestNetGenesis = &GenesisConfig{
+	Network: &SeedNetworkConfig{
+		SeedList: TestNetSeeds,
+		Name:     NETWORK_NAME_TEST,
+	},
 }
 
-func NewDaseinConfig(nt nettype) *DaseinConfig {
-	net := &SeedNetworkConfig{}
-	switch nt {
-	case mainnet:
-		net = MainNetWork
-	case testnet:
-		net = TestNetWork
-	default: //custom
-	}
+func DefConfig() *DaseinConfig {
 	return &DaseinConfig{
-		Genesis: &GenesisConfig{
-			Network: net,
-		},
 		Common: &CommonConfig{
 			LogLevel:  DEFAULT_LOG_LEVEL,
 			LogStderr: false,
 		},
 		Consensus: &ConsensusConfig{},
 		P2P: &P2PConfig{
-			Port:           DEFAULT_LISTEN_PORT,
-			Protocol:       DEFAULT_LISTEN_PROTOCOL,
-			Nat:            true,
-			DHT:            true,
-			Reconnect:      true,
-			MaxConnLimit:   DEFAULT_MAX_CONN_LIMIT,
-			MaxForSingleIP: DEFAULT_MAX_INBOUND_SINGLE_IP,
-			//SignatureAlgo:  DEFAULT_SIGNATURE_POLICY,
-			//HashAlgo:       DEFAULT_HASH_POLICY,
+			Port:             DEFAULT_LISTEN_PORT,
+			Protocol:         DEFAULT_LISTEN_PROTOCOL,
+			Nat:              true,
+			DHT:              true,
+			Reconnect:        true,
+			MaxConnInLimit:   DEFAULT_MAX_CONN_INBOUND_LIMIT,
+			MaxConnOutLimit:  DEFAULT_MAX_CONN_OUTBOUND_LIMIT,
+			MaxInForSingleIP: DEFAULT_MAX_INBOUND_SINGLE_IP,
 		},
 		Rpc: &RpcConfig{
 			EnableGRPC: false,
@@ -176,9 +173,17 @@ func NewDaseinConfig(nt nettype) *DaseinConfig {
 			GRPCPort:   DEFAULT_GRPC_PORT,
 			JSONPort:   DEFAULT_JSONRPC_PORT,
 		},
-		Engine: &EngineConfig{},
+		Engine: &EngineConfig{
+			IncomingPort:      DEFAULT_ENGINE_INCOMINGPORT,
+			DownloadDirectory: DEFAULT_ENGINE_DOWNLOADDIR,
+		},
 	}
 }
 
 //current default config
-var DefConfig = NewDaseinConfig(testnet)
+var DefaultConfig = DefConfig()
+
+func (this *DaseinConfig) Set(n *GenesisConfig) {
+	this.Genesis.Network = n.Network
+	this.Magic = n.genesisMagic()
+}
