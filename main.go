@@ -10,6 +10,7 @@ import (
 	"github.com/daseinio/do/cmd"
 	"github.com/daseinio/do/common/config"
 	"github.com/daseinio/do/common/log"
+	"github.com/daseinio/do/dsp"
 	"github.com/urfave/cli"
 )
 
@@ -43,6 +44,10 @@ func initAPP() *cli.App {
 		//engine
 		cmd.DownloadDirFlag,
 		cmd.IncomigPortFlag,
+		//bt
+		cmd.RemoteDownloadDirFlag,
+		cmd.DownloadFlag,
+		cmd.MagnetFlag,
 	}
 	app.Before = func(context *cli.Context) error {
 		runtime.GOMAXPROCS(runtime.NumCPU())
@@ -59,7 +64,39 @@ func main() {
 }
 func doit(ctx *cli.Context) {
 	initLog(ctx)
+
+	err := initConfig(ctx)
+	if err != nil {
+		log.Errorf("initConfig error:%s", err)
+		return
+	}
+	svr := &dsp.Server{
+		State: &dsp.Info{},
+	}
+	if err = svr.Run(); err != nil {
+		log.Errorf("run bt server error:%s", err)
+		return
+	}
+	url := ctx.String(cmd.GetFlagName(cmd.RemoteDownloadDirFlag))
+	if url != "" {
+		svr.StartRemoteTorrent(url, "test")
+	}
+	url = ctx.String(cmd.GetFlagName(cmd.MagnetFlag))
+	log.Infoln(url)
+	if url != "" {
+		svr.StartMagnet(url)
+	}
 	waitToExit()
+}
+
+func initConfig(ctx *cli.Context) error {
+	//init ontology config from cli
+	_, err := cmd.SetDaseinConfig(ctx)
+	if err != nil {
+		return err
+	}
+	log.Infof("Config init success")
+	return nil
 }
 
 func initLog(ctx *cli.Context) {

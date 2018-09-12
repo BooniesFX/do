@@ -3,9 +3,6 @@ package engine
 import (
 	"encoding/hex"
 	"fmt"
-	"os"
-	"path/filepath"
-	"strconv"
 	"sync"
 	"time"
 
@@ -13,13 +10,12 @@ import (
 	"github.com/anacrolix/torrent"
 	"github.com/anacrolix/torrent/metainfo"
 	"github.com/daseinio/do/common/config"
-	"github.com/daseinio/do/common/log"
 )
 
 type DoEngine struct {
 	mut       sync.Mutex
 	client    *torrent.Client
-	defconfig Config.EngineConfig
+	defconfig *config.EngineConfig
 	ts        map[string]*Torrent
 }
 
@@ -27,11 +23,11 @@ func New() *DoEngine {
 	return &DoEngine{ts: map[string]*Torrent{}}
 }
 
-func (e *DoEngine) Config() Config {
+func (e *DoEngine) Config() *config.EngineConfig {
 	return e.defconfig
 }
 
-func (e *DoEngine) Configure(c Config.EngineConfig) error {
+func (e *DoEngine) Configure(c *config.EngineConfig) error {
 	//recieve config
 	if e.client != nil {
 		e.client.Close()
@@ -40,23 +36,20 @@ func (e *DoEngine) Configure(c Config.EngineConfig) error {
 	if c.IncomingPort <= 0 {
 		return fmt.Errorf("Invalid incoming port (%d)", c.IncomingPort)
 	}
-	tc := torrent.Config{
-		DHTConfig: dht.ServerConfig{
-			StartingNodes: dht.GlobalBootstrapAddrs,
-		},
-		DataDir:    c.DownloadDirectory,
-		ListenAddr: "0.0.0.0:" + strconv.Itoa(c.IncomingPort),
-		NoUpload:   !c.EnableUpload,
-		Seed:       c.EnableSeeding,
+	tc := torrent.ClientConfig{
+		DhtStartingNodes: dht.GlobalBootstrapAddrs,
+		DataDir:          c.DownloadDirectory,
+		NoUpload:         !c.EnableUpload,
+		Seed:             c.EnableSeeding,
 	}
 	tc.DisableEncryption = c.DisableEncryption
-
+	tc.SetListenAddr(":53007")
 	client, err := torrent.NewClient(&tc)
 	if err != nil {
 		return err
 	}
 	e.mut.Lock()
-	e.config = c
+	e.defconfig = c
 	e.client = client
 	e.mut.Unlock()
 	//reset
@@ -167,30 +160,6 @@ func (e *DoEngine) DeleteTorrent(infohash string) error {
 	if tt, ok := e.client.Torrent(ih); ok {
 		tt.Drop()
 	}
-	return nil
-}
-
-func (e *DoEngine) StartFile(infohash, filepath string) error {
-	t, err := e.getOpenTorrent(infohash)
-	if err != nil {
-		return err
-	}
-	var f *File
-	for _, file := range t.Files {
-		if file.Path == filepath {
-			f = file
-			break
-		}
-	}
-	if f == nil {
-		return fmt.Errorf("Missing file %s", filepath)
-	}
-	if f.Started {
-		return fmt.Errorf("Already started")
-	}
-	t.Started = true
-	f.Started = true
-	f.f.PrioritizeRegion(0, f.Size)
 	return nil
 }
 
