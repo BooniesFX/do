@@ -12,7 +12,7 @@ var (
 	AppHelpTemplate = `NAME:
    {{.App.Name}} - {{.App.Usage}}
 
-	Do is an dasein node command line Client for starting and managing dasein nodes,
+	Do is an dasein node command line client for starting and managing dasein nodes,
 	managing user wallets, sending transactions, sharing data and invoking contract, and so on.
 
 USAGE:
@@ -78,14 +78,14 @@ var AppHelpFlagGroups = []flagGroup{
 		Flags: []cli.Flag{},
 	},
 	{
-		Name: "DASEIN PROTOCOL",
+		Name: "ENGINE",
 		Flags: []cli.Flag{
 			DownloadDirFlag,
 			IncomigPortFlag,
 		},
 	},
 	{
-		Name: "P2P NODE",
+		Name: "P2P",
 		Flags: []cli.Flag{
 			ProtocolFlag,
 			PortFlag,

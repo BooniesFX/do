@@ -124,6 +124,9 @@ type RpcConfig struct {
 type EngineConfig struct {
 	IncomingPort      uint
 	DownloadDirectory string
+	EnableUpload      bool
+	EnableSeeding     bool
+	DisableEncryption bool
 }
 
 type DaseinConfig struct {
@@ -152,6 +155,7 @@ var TestNetGenesis = &GenesisConfig{
 
 func DefConfig() *DaseinConfig {
 	return &DaseinConfig{
+		Genesis: &GenesisConfig{},
 		Common: &CommonConfig{
 			LogLevel:  DEFAULT_LOG_LEVEL,
 			LogStderr: false,
@@ -176,6 +180,9 @@ func DefConfig() *DaseinConfig {
 		Engine: &EngineConfig{
 			IncomingPort:      DEFAULT_ENGINE_INCOMINGPORT,
 			DownloadDirectory: DEFAULT_ENGINE_DOWNLOADDIR,
+			EnableUpload:      true,
+			EnableSeeding:     true,
+			DisableEncryption: true,
 		},
 	}
 }

@@ -13,11 +13,11 @@ import (
 	"github.com/anacrolix/torrent"
 	"github.com/anacrolix/torrent/metainfo"
 	"github.com/daseinio/do/common/config"
+	"github.com/daseinio/do/common/log"
 )
 
 type DoEngine struct {
 	mut       sync.Mutex
-	cacheDir  string
 	client    *torrent.Client
 	defconfig Config.EngineConfig
 	ts        map[string]*Torrent
@@ -31,7 +31,7 @@ func (e *DoEngine) Config() Config {
 	return e.defconfig
 }
 
-func (e *DoEngine) Configure(c Config) error {
+func (e *DoEngine) Configure(c Config.EngineConfig) error {
 	//recieve config
 	if e.client != nil {
 		e.client.Close()
@@ -84,9 +84,7 @@ func (e *DoEngine) newTorrent(tt *torrent.Torrent) error {
 	t := e.upsertTorrent(tt)
 	go func() {
 		<-t.t.GotInfo()
-		// if e.config.AutoStart && !loaded && torrent.Loaded && !torrent.Started {
 		e.StartTorrent(t.InfoHash)
-		// }
 	}()
 	return nil
 }
@@ -158,31 +156,12 @@ func (e *DoEngine) StartTorrent(infohash string) error {
 	return nil
 }
 
-func (e *DoEngine) StopTorrent(infohash string) error {
-	t, err := e.getTorrent(infohash)
-	if err != nil {
-		return err
-	}
-	if !t.Started {
-		return fmt.Errorf("Already stopped")
-	}
-	//there is no stop - kill underlying torrent
-	t.t.Drop()
-	t.Started = false
-	for _, f := range t.Files {
-		if f != nil {
-			f.Started = false
-		}
-	}
-	return nil
-}
-
 func (e *DoEngine) DeleteTorrent(infohash string) error {
 	t, err := e.getTorrent(infohash)
 	if err != nil {
 		return err
 	}
-	os.Remove(filepath.Join(e.cacheDir, infohash+".torrent"))
+	//os.Remove(filepath.Join(e.cacheDir, infohash+".torrent"))
 	delete(e.ts, t.InfoHash)
 	ih, _ := str2ih(infohash)
 	if tt, ok := e.client.Torrent(ih); ok {
@@ -213,10 +192,6 @@ func (e *DoEngine) StartFile(infohash, filepath string) error {
 	f.Started = true
 	f.f.PrioritizeRegion(0, f.Size)
 	return nil
-}
-
-func (e *DoEngine) StopFile(infohash, filepath string) error {
-	return fmt.Errorf("Unsupported")
 }
 
 func str2ih(str string) (metainfo.Hash, error) {

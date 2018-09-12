@@ -4,6 +4,22 @@ import:
 - package: github.com/gogo/protobuf 
   version: v1.1.1
 - package: github.com/urfave/cli
+  version: v1.20.0
 - package: github.com/anacrolix/torrent
+- package: golang.org/x/text
+  repo: https://github.com/golang/text.git
+- package: golang.org/x/crypto
+  repo: https://github.com/golang/crypto.git
+- package: golang.org/x/net
+  repo: https://github.com/golang/net
+- package: golang.org/x/time
+  repo: https://github.com/golang/time
+- package: github.com/shirou/gopsutil
+- package: golang.org/x/sys
+  repo: https://github.com/golang/sys.git
+  subpackages:
+  - unix
+ignore:
+  - golang.org/x/sys/unix
 
   

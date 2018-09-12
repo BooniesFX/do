@@ -6,7 +6,7 @@ import (
 	"github.com/daseinio/dasein-p2p/network/backoff"
 	"github.com/daseinio/dasein-p2p/network/discovery"
 	"github.com/daseinio/dasein-p2p/network/nat"
-	"github.com/daseinio/dasein-p2p/network/peer"
+	"github.com/daseinio/dasein-p2p/peer"
 	"github.com/daseinio/do/common/config"
 	"github.com/daseinio/do/common/log"
 	//msg "github.com/daseinio/do/netserver/p2pmsg"

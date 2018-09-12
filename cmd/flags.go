@@ -94,6 +94,19 @@ var (
 		Usage: "Using to specify the engine port number",
 		Value: config.DEFAULT_ENGINE_INCOMINGPORT,
 	}
+	//bt
+	RemoteDownloadDirFlag = cli.StringFlag{
+		Name:  "url",
+		Usage: "Using url `<url_to_torrent>` to download file by remote torrent file",
+	}
+	DownloadFlag = cli.StringFlag{
+		Name:  "open",
+		Usage: "Using start `<path_to_torrent>` to download file by loacal torrent file",
+	}
+	MagnetFlag = cli.StringFlag{
+		Name:  "magnet",
+		Usage: "Using magnet `<url_to_magnet>` to download file by magnet",
+	}
 )
 
 //GetFlagName deal with short flag, and return the flag name whether flag name have short name
